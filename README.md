@@ -18,7 +18,7 @@ Automatically updates your documentation files (like `AGENTS.md`) based on PR re
 Create `.github/workflows/pr-review-to-docs.yml`:
 
 ```yaml
-name: Update Docs from PR Review
+name: Update AGENTS.md from PR review
 
 on:
   pull_request_review:
@@ -39,7 +39,7 @@ jobs:
           fetch-depth: 0
 
       - name: Update AGENTS.md from PR review
-        uses: YOUR-USERNAME/pr-agents-update@v1  # Replace with your repo
+        uses: carsonfarmer/pr-review-for-agents@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -113,7 +113,7 @@ The action will:
 You can use any Claude model by specifying the `model` input:
 
 ```yaml
-- uses: YOUR-USERNAME/pr-agents-update@v1
+- uses: carsonfarmer/pr-review-for-agents@v1
   with:
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     model: 'claude-3-opus-20240229'
@@ -132,7 +132,7 @@ model: ${{ vars.LLM_MODEL || 'claude-sonnet-4-5-20250929' }}
 ### Using a different documentation file
 
 ```yaml
-- uses: YOUR-USERNAME/pr-agents-update@v1
+- uses: carsonfarmer/pr-review-for-agents@v1
   with:
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     doc-file: 'ARCHITECTURE.md'
