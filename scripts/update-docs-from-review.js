@@ -1,6 +1,6 @@
+import { anthropic } from "@ai-sdk/anthropic";
 import { Octokit } from "@octokit/rest";
 import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
 import { readFile, writeFile } from "fs/promises";
 
 async function main() {
@@ -14,7 +14,7 @@ async function main() {
   const docFile = process.env.DOC_FILE;
 
   const [owner, repo] = process.env.REPOSITORY.split("/");
-  const prNumber = parseInt(process.env.PR_NUMBER);
+  const prNumber = parseInt(process.env.PR_NUMBER, 10);
 
   console.log(`Processing PR #${prNumber} in ${owner}/${repo}`);
   console.log(`Updating documentation file: ${docFile}`);
@@ -120,15 +120,11 @@ ${existingContent || "(Empty - needs to be created)"}
 
 ${docFile} should contain information about AI agents, automated processes, agent-related patterns, or agent implementation details discussed in the PR reviews.
 
-IMPORTANT: When updating the documentation, preserve all existing functionality, requirements, and instructions. Only add or clarify based on the review comments - never remove or reduce existing content unless explicitly requested in the comments.
-
-You must respond with a JSON object in the following format:
-{
-  "content": "Full content for ${docFile} file",
-  "needs_update": true or false (whether the documentation actually needs to be updated based on the review comments)
-}
-
-If the review comments don't contain relevant information for this documentation file, set needs_update to false and return the existing content unchanged.`,
+IMPORTANT:
+- When updating the documentation, preserve all existing functionality, requirements, and instructions.
+- Only add or clarify based on the review comments - never remove or reduce existing content unless explicitly requested in the comments.
+- If the review comments don't contain relevant information for this documentation file, return an empty response (no text at all).
+- Return the full updated content of the ${docFile} file as plain text (not JSON).`,
     prompt: `Please update the ${docFile} documentation based on these PR review comments:
 
 ${prContext}
@@ -136,25 +132,23 @@ ${prContext}
 Existing documentation:
 ${existingDocsContext}
 
-Generate updated content for ${docFile} that incorporates insights from the review comments. If the review comments don't contain information relevant to ${docFile}, set needs_update to false.`,
+Generate the full updated content for ${docFile} that incorporates insights from the review comments. If the review comments don't contain information relevant to ${docFile}, return empty text.`,
   });
 
-  const response = JSON.parse(text);
-
   // Check if update is needed
-  if (!response.needs_update) {
+  if (!text || text.trim() === "") {
     console.log(`No relevant changes for ${docFile} - skipping update`);
     return;
   }
 
   // Check if content actually changed
-  if (response.content === existingContent) {
+  if (text === existingContent) {
     console.log(`Content unchanged for ${docFile} - skipping update`);
     return;
   }
 
   // Write updated file
-  await writeFile(docFile, response.content);
+  await writeFile(docFile, text);
   console.log(`✓ Updated ${docFile}`);
 
   console.log("Documentation update complete!");
