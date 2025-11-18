@@ -23,5 +23,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: ${{ vars.LLM_MODEL || 'claude-sonnet-4-5-20250929' }}
+          model: ${{ vars.LLM_MODEL }}
           doc-file: "AGENTS.md"

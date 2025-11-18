@@ -10,8 +10,8 @@ async function main() {
   });
 
   // Configure model and doc file
-  const modelName = process.env.LLM_MODEL || "claude-sonnet-4-5-20250929";
-  const docFile = process.env.DOC_FILE || "AGENTS.md";
+  const modelName = process.env.LLM_MODEL;
+  const docFile = process.env.DOC_FILE;
 
   const [owner, repo] = process.env.REPOSITORY.split("/");
   const prNumber = parseInt(process.env.PR_NUMBER);
