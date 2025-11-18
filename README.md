@@ -1,4 +1,4 @@
-# PR Review to Docs Action
+# Update AGENTS.md from PR review
 
 Automatically updates your documentation files (like `AGENTS.md`) based on PR review comments using AI. This action uses Claude (via the Vercel AI SDK) to intelligently incorporate review feedback into your documentation, keeping it synchronized with code changes and discussions.
 
