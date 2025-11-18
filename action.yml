@@ -79,6 +79,7 @@ runs:
           Source PR: #${{ github.event.pull_request.number }}
         branch: update-${{ inputs.doc-file }}-pr-${{ github.event.pull_request.number }}
         delete-branch: true
+        signoff: true
         title: "docs: Update ${{ inputs.doc-file }} from PR #${{ github.event.pull_request.number }} review"
         body: |
           Automated documentation update based on review comments from PR #${{ github.event.pull_request.number }}.
@@ -88,5 +89,3 @@ runs:
 
           This PR updates `${{ inputs.doc-file }}` with insights from the review discussion.
         labels: documentation, automated
-        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
