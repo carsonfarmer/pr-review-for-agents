@@ -1,7 +1,7 @@
 {
   "name": "pr-review-for-agents",
   "version": "1.0.0",
-  "description": "Automatically update agent guide from PR review comments",
+  "description": "Automatically updates AGENTS.md documentation based on PR review comments using AI",
   "type": "module",
   "main": "scripts/update-docs-from-review.js",
   "scripts": {
