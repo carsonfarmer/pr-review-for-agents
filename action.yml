@@ -1,30 +1,30 @@
-name: 'PR Review to AGENTS.md'
-description: 'Automatically updates AGENTS.md documentation based on PR review comments using AI'
-author: 'Your Name'
+name: "PR Review to AGENTS.md"
+description: "Automatically updates AGENTS.md documentation based on PR review comments using AI"
+author: "Carson Farmer"
 
 branding:
-  icon: 'file-text'
-  color: 'blue'
+  icon: "file-text"
+  color: "blue"
 
 inputs:
   github-token:
-    description: 'GitHub token for API access'
+    description: "GitHub token for API access"
     required: true
     default: ${{ github.token }}
   anthropic-api-key:
-    description: 'Anthropic API key for Claude'
+    description: "Anthropic API key for Claude"
     required: true
   model:
-    description: 'Claude model to use'
+    description: "Claude model to use"
     required: false
-    default: 'claude-sonnet-4-5-20250929'
+    default: "claude-sonnet-4-5-20250929"
   doc-file:
-    description: 'Documentation file to update'
+    description: "Documentation file to update"
     required: false
-    default: 'AGENTS.md'
+    default: "AGENTS.md"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Check if PR modifies doc file
       id: check_files
@@ -45,7 +45,7 @@ runs:
       if: steps.check_files.outputs.skip != 'true'
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: "20"
 
     - name: Install dependencies
       if: steps.check_files.outputs.skip != 'true'
