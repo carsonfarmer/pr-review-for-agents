@@ -18,51 +18,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Check if PR modifies AGENTS.md
-        id: check_files
-        run: |
-          files=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
-
-          if echo "$files" | grep -q "^AGENTS.md$"; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "Skipping: PR modifies AGENTS.md (avoiding review loop)"
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Setup Node.js
-        if: steps.check_files.outputs.skip != 'true'
-        uses: actions/setup-node@v4
+      - name: Update AGENTS.md from PR review
+        uses: ./
         with:
-          node-version: "20"
-
-      - name: Install dependencies
-        if: steps.check_files.outputs.skip != 'true'
-        run: npm install @octokit/rest ai @ai-sdk/anthropic
-
-      - name: Update docs from review comments
-        if: steps.check_files.outputs.skip != 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          LLM_MODEL: ${{ vars.LLM_MODEL || 'claude-3-5-sonnet-20241022' }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPOSITORY: ${{ github.repository }}
-          REVIEW_BODY: ${{ github.event.review.body }}
-          REVIEW_STATE: ${{ github.event.review.state }}
-        run: node .github/scripts/update-docs-from-review.js
-
-      - name: Commit and push changes
-        if: steps.check_files.outputs.skip != 'true'
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add AGENTS.md
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "docs: Update AGENTS.md from PR review"
-            git push
-          fi
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: ${{ vars.LLM_MODEL || 'claude-3-5-sonnet-20241022' }}
+          doc-file: 'AGENTS.md'

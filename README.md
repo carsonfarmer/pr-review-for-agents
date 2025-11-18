@@ -1,45 +1,179 @@
-# PR Review to Documentation
+# PR Review to Docs Action
 
-This repository automatically updates documentation files (AGENTS.md and CLAUDE.md) based on PR review comments using an LLM.
+Automatically updates your documentation files (like `AGENTS.md`) based on PR review comments using AI. This action uses Claude (via the Vercel AI SDK) to intelligently incorporate review feedback into your documentation, keeping it synchronized with code changes and discussions.
+
+## Features
+
+- 🤖 Uses Claude AI to understand and incorporate review feedback
+- 📝 Preserves existing documentation while adding new insights
+- 🔄 Prevents infinite loops by skipping PRs that modify the doc file
+- ⚡ Efficient with conditional step execution
+- 🎨 Configurable model and documentation file
+- 🔒 Secure with proper permission handling
 
 ## Setup
 
-1. **Set up the LLM API Key secret:**
-   - Go to your GitHub repository settings
-   - Navigate to Secrets and Variables → Actions
-   - Add a new repository secret named `LLM_API_KEY`
-   - Paste your OpenAI API key (or other LLM provider key)
+### 1. Add the workflow to your repository
 
-2. **Ensure GitHub Actions has write permissions:**
-   - Go to Settings → Actions → General
-   - Under "Workflow permissions", select "Read and write permissions"
-   - Check "Allow GitHub Actions to create and approve pull requests"
+Create `.github/workflows/pr-review-to-docs.yml`:
 
-## How It Works
+```yaml
+name: Update Docs from PR Review
 
-1. When a PR review is submitted, the GitHub Action is triggered
-2. The action fetches all review comments (both inline and overall reviews)
-3. It sends the comments along with the PR context to an LLM
-4. The LLM generates updated content for AGENTS.md and CLAUDE.md
-5. The changes are committed and pushed back to the PR branch
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Update AGENTS.md from PR review
+        uses: YOUR-USERNAME/pr-agents-update@v1  # Replace with your repo
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: 'claude-3-5-sonnet-20241022'  # Optional: defaults to this
+          doc-file: 'AGENTS.md'  # Optional: defaults to this
+```
+
+### 2. Configure secrets
+
+Add your Anthropic API key to your repository secrets:
+
+1. Go to your repository → Settings → Secrets and variables → Actions
+2. Click "New repository secret"
+3. Name: `ANTHROPIC_API_KEY`
+4. Value: Your Anthropic API key from https://console.anthropic.com/
+
+### 3. Ensure GitHub Actions has write permissions
+
+- Go to Settings → Actions → General
+- Under "Workflow permissions", select "Read and write permissions"
+
+### 4. Create your documentation file
+
+Create an `AGENTS.md` file (or your chosen doc file) in your repository root. The action will update this file based on PR review comments.
+
+Example `AGENTS.md` template:
+
+```markdown
+# AGENTS.md
+
+This document tracks information about AI agents, automated processes, and agent-related patterns discussed in PR reviews.
+
+## Overview
+
+(This section will be populated based on PR review comments)
+
+## Implementation Details
+
+(This section will be populated based on PR review comments)
 
 ## Configuration
 
-### Using a Different LLM Provider
+(This section will be populated based on PR review comments)
+```
 
-The script uses OpenAI by default, but you can modify `.github/scripts/update-docs-from-review.js` to use other providers:
+## Usage
 
-- **Anthropic Claude:** Replace OpenAI client with Anthropic client
-- **Azure OpenAI:** Configure OpenAI client with Azure endpoint
-- **Local LLM:** Point to your local endpoint
+Once set up, the action will automatically run when:
+- Someone submits a PR review (approved, commented, or requested changes)
+- The PR does NOT modify the documentation file itself (to prevent loops)
 
-### Customizing Documentation Files
+The action will:
+1. Gather all review comments (both inline and overall)
+2. Send them to Claude along with the current documentation
+3. Generate updated documentation that incorporates the feedback
+4. Commit and push the changes back to the PR branch
 
-Edit the system prompt in `.github/scripts/update-docs-from-review.js` to change how the LLM generates documentation.
+## Inputs
 
-## Files
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `github-token` | GitHub token for API access | Yes | `${{ github.token }}` |
+| `anthropic-api-key` | Anthropic API key for Claude | Yes | - |
+| `model` | Claude model to use | No | `claude-3-5-sonnet-20241022` |
+| `doc-file` | Documentation file to update | No | `AGENTS.md` |
 
-- `.github/workflows/pr-review-to-docs.yml` - GitHub Actions workflow
-- `.github/scripts/update-docs-from-review.js` - Script that processes reviews and calls LLM
-- `AGENTS.md` - Documentation about AI agents
-- `CLAUDE.md` - Documentation about Claude AI
+## Customization
+
+### Using a different model
+
+You can use any Claude model by specifying the `model` input:
+
+```yaml
+- uses: YOUR-USERNAME/pr-agents-update@v1
+  with:
+    anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+    model: 'claude-3-opus-20240229'
+```
+
+Or set it as a repository variable:
+
+1. Go to Settings → Secrets and variables → Actions → Variables
+2. Add `LLM_MODEL` with your preferred model name
+3. Use it in the workflow:
+
+```yaml
+model: ${{ vars.LLM_MODEL || 'claude-3-5-sonnet-20241022' }}
+```
+
+### Using a different documentation file
+
+```yaml
+- uses: YOUR-USERNAME/pr-agents-update@v1
+  with:
+    anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+    doc-file: 'ARCHITECTURE.md'
+```
+
+## How it works
+
+1. **Trigger**: Action runs on PR review submission
+2. **Check**: Verifies the PR doesn't modify the doc file (prevents loops)
+3. **Gather**: Collects all PR review comments and current documentation
+4. **Generate**: Sends context to Claude with instructions to:
+   - Preserve existing functionality and requirements
+   - Add insights from review comments
+   - Maintain documentation structure
+5. **Update**: Writes the updated documentation
+6. **Commit**: Pushes changes back to the PR branch
+
+## Loop Prevention
+
+The action automatically skips execution if the PR modifies the documentation file. This prevents an infinite loop where:
+- PR updates docs → review triggers action → action updates docs → new commit gets reviewed → repeat
+
+## Local Development
+
+To test changes to this action locally:
+
+1. Make your changes to the action files
+2. Use the workflow in this repo (`.github/workflows/pr-review-to-docs.yml`) which uses `uses: ./` to test locally
+3. Create a PR and submit a review to trigger the action
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - feel free to use this in your projects!
+
+## Credits
+
+Built with:
+- [Vercel AI SDK](https://sdk.vercel.ai/)
+- [Anthropic Claude](https://www.anthropic.com/)
+- [Octokit](https://github.com/octokit/octokit.js)
