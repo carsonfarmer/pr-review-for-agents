@@ -1,20 +1,19 @@
-const { Octokit } = require('@octokit/rest');
-const { generateText } = require('ai');
-const { anthropic } = require('@ai-sdk/anthropic');
-const fs = require('fs').promises;
-const path = require('path');
+import { Octokit } from "@octokit/rest";
+import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { readFile, writeFile } from "fs/promises";
 
 async function main() {
   // Initialize clients
   const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN
+    auth: process.env.GITHUB_TOKEN,
   });
 
   // Configure model and doc file
-  const modelName = process.env.LLM_MODEL || 'claude-3-5-sonnet-20241022';
-  const docFile = process.env.DOC_FILE || 'AGENTS.md';
+  const modelName = process.env.LLM_MODEL || "claude-sonnet-4-5-20250929";
+  const docFile = process.env.DOC_FILE || "AGENTS.md";
 
-  const [owner, repo] = process.env.REPOSITORY.split('/');
+  const [owner, repo] = process.env.REPOSITORY.split("/");
   const prNumber = parseInt(process.env.PR_NUMBER);
 
   console.log(`Processing PR #${prNumber} in ${owner}/${repo}`);
@@ -24,91 +23,95 @@ async function main() {
   const { data: pr } = await octokit.pulls.get({
     owner,
     repo,
-    pull_number: prNumber
+    pull_number: prNumber,
   });
 
   // Fetch all review comments (inline comments)
   const { data: reviewComments } = await octokit.pulls.listReviewComments({
     owner,
     repo,
-    pull_number: prNumber
+    pull_number: prNumber,
   });
 
   // Fetch all reviews (overall review comments)
   const { data: reviews } = await octokit.pulls.listReviews({
     owner,
     repo,
-    pull_number: prNumber
+    pull_number: prNumber,
   });
 
   // Compile all comments
   const allComments = [];
 
   // Add review-level comments
-  reviews.forEach(review => {
+  reviews.forEach((review) => {
     if (review.body) {
       allComments.push({
-        type: 'review',
+        type: "review",
         author: review.user.login,
         state: review.state,
         body: review.body,
-        submitted_at: review.submitted_at
+        submitted_at: review.submitted_at,
       });
     }
   });
 
   // Add inline review comments
-  reviewComments.forEach(comment => {
+  reviewComments.forEach((comment) => {
     allComments.push({
-      type: 'inline',
+      type: "inline",
       author: comment.user.login,
       path: comment.path,
       line: comment.line,
       body: comment.body,
-      created_at: comment.created_at
+      created_at: comment.created_at,
     });
   });
 
   console.log(`Found ${allComments.length} comments total`);
 
   if (allComments.length === 0) {
-    console.log('No comments to process');
+    console.log("No comments to process");
     return;
   }
 
   // Read existing doc file if it exists
-  let existingContent = '';
+  let existingContent = "";
 
   try {
-    existingContent = await fs.readFile(docFile, 'utf-8');
-  } catch (error) {
+    existingContent = await readFile(docFile, "utf-8");
+  } catch (_error) {
     console.log(`${docFile} does not exist yet`);
   }
 
   // Prepare context for LLM
   const prContext = `
 PR Title: ${pr.title}
-PR Description: ${pr.body || 'No description provided'}
+PR Description: ${pr.body || "No description provided"}
 PR Author: ${pr.user.login}
 
 Review Comments (${allComments.length} total):
-${allComments.map((comment, idx) => `
+${allComments
+  .map(
+    (comment, idx) => `
 Comment ${idx + 1}:
   Type: ${comment.type}
   Author: ${comment.author}
-  ${comment.state ? `State: ${comment.state}` : ''}
-  ${comment.path ? `File: ${comment.path} (Line ${comment.line})` : ''}
+  ${comment.state ? `State: ${comment.state}` : ""}
+  ${comment.path ? `File: ${comment.path} (Line ${comment.line})` : ""}
   Body: ${comment.body}
-`).join('\n')}
+`,
+  )
+  .join("\n")}
 `;
 
   const existingDocsContext = `
 Current ${docFile}:
-${existingContent || '(Empty - needs to be created)'}
+${existingContent || "(Empty - needs to be created)"}
 `;
 
   // Call LLM to generate updated documentation
-  console.log('Calling LLM to generate documentation...');
+  console.log("Calling LLM to generate documentation...");
 
   const { text } = await generateText({
     model: anthropic(modelName),
@@ -121,10 +124,11 @@ IMPORTANT: When updating the documentation, preserve all existing functionality,
 
 You must respond with a JSON object in the following format:
 {
-  "content": "Full content for ${docFile} file"
+  "content": "Full content for ${docFile} file",
+  "needs_update": true or false (whether the documentation actually needs to be updated based on the review comments)
 }
 
-If the review comments don't contain relevant information, you can use the existing content or update it minimally.`,
+If the review comments don't contain relevant information for this documentation file, set needs_update to false and return the existing content unchanged.`,
     prompt: `Please update the ${docFile} documentation based on these PR review comments:
 
 ${prContext}
@@ -132,19 +136,31 @@ ${prContext}
 Existing documentation:
 ${existingDocsContext}
 
-Generate updated content for ${docFile} that incorporates insights from the review comments.`
+Generate updated content for ${docFile} that incorporates insights from the review comments. If the review comments don't contain information relevant to ${docFile}, set needs_update to false.`,
   });
 
   const response = JSON.parse(text);
 
+  // Check if update is needed
+  if (!response.needs_update) {
+    console.log(`No relevant changes for ${docFile} - skipping update`);
+    return;
+  }
+
+  // Check if content actually changed
+  if (response.content === existingContent) {
+    console.log(`Content unchanged for ${docFile} - skipping update`);
+    return;
+  }
+
   // Write updated file
-  await fs.writeFile(docFile, response.content);
+  await writeFile(docFile, response.content);
   console.log(`✓ Updated ${docFile}`);
 
-  console.log('Documentation update complete!');
+  console.log("Documentation update complete!");
 }
 
-main().catch(error => {
-  console.error('Error:', error);
+main().catch((error) => {
+  console.error("Error:", error);
   process.exit(1);
 });

@@ -43,7 +43,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: 'claude-3-5-sonnet-20241022'  # Optional: defaults to this
+          model: 'claude-sonnet-4-5-20250929'  # Optional: defaults to this
           doc-file: 'AGENTS.md'  # Optional: defaults to this
 ```
 
@@ -103,7 +103,7 @@ The action will:
 |-------|-------------|----------|---------|
 | `github-token` | GitHub token for API access | Yes | `${{ github.token }}` |
 | `anthropic-api-key` | Anthropic API key for Claude | Yes | - |
-| `model` | Claude model to use | No | `claude-3-5-sonnet-20241022` |
+| `model` | Claude model to use | No | `claude-sonnet-4-5-20250929` |
 | `doc-file` | Documentation file to update | No | `AGENTS.md` |
 
 ## Customization
@@ -126,7 +126,7 @@ Or set it as a repository variable:
 3. Use it in the workflow:
 
 ```yaml
-model: ${{ vars.LLM_MODEL || 'claude-3-5-sonnet-20241022' }}
+model: ${{ vars.LLM_MODEL || 'claude-sonnet-4-5-20250929' }}
 ```
 
 ### Using a different documentation file

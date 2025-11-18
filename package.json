@@ -1,8 +1,9 @@
 {
-  "name": "pr-review-to-docs",
+  "name": "pr-review-for-agents",
   "version": "1.0.0",
-  "description": "Automatically update documentation from PR review comments using LLM",
-  "main": ".github/scripts/update-docs-from-review.js",
+  "description": "Automatically update agent guide from PR review comments",
+  "type": "module",
+  "main": "scripts/update-docs-from-review.js",
   "scripts": {
     "test": "echo \"No tests specified\""
   },
@@ -11,12 +12,13 @@
     "pr-review",
     "documentation",
     "llm",
-    "openai"
+    "agents"
   ],
-  "author": "",
+  "author": "Carson Farmer <carson.farmer@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.5",
     "@octokit/rest": "^20.0.2",
-    "openai": "^4.20.1"
+    "ai": "^4.0.0"
   }
 }
