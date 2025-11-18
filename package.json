@@ -1,0 +1,22 @@
+{
+  "name": "pr-review-to-docs",
+  "version": "1.0.0",
+  "description": "Automatically update documentation from PR review comments using LLM",
+  "main": ".github/scripts/update-docs-from-review.js",
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": [
+    "github-actions",
+    "pr-review",
+    "documentation",
+    "llm",
+    "openai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "openai": "^4.20.1"
+  }
+}
