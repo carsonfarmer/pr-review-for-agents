@@ -66,16 +66,27 @@ runs:
         REVIEW_BODY: ${{ github.event.review.body }}
         REVIEW_STATE: ${{ github.event.review.state }}
 
-    - name: Commit and push changes
+    - name: Create Pull Request with documentation updates
       if: steps.check_files.outputs.skip != 'true'
-      shell: bash
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add ${{ inputs.doc-file }}
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "docs: Update ${{ inputs.doc-file }} from PR review"
-          git push
-        fi
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ inputs.github-token }}
+        commit-message: |
+          docs: Update ${{ inputs.doc-file }} from PR #${{ github.event.pull_request.number }} review
+
+          Automated update based on review comments.
+
+          Source PR: #${{ github.event.pull_request.number }}
+        branch: update-${{ inputs.doc-file }}-pr-${{ github.event.pull_request.number }}
+        delete-branch: true
+        title: "docs: Update ${{ inputs.doc-file }} from PR #${{ github.event.pull_request.number }} review"
+        body: |
+          Automated documentation update based on review comments from PR #${{ github.event.pull_request.number }}.
+
+          **Source PR:** #${{ github.event.pull_request.number }}
+          **Reviewer:** @${{ github.event.review.user.login }}
+
+          This PR updates `${{ inputs.doc-file }}` with insights from the review discussion.
+        labels: documentation, automated
+        committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+        author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
