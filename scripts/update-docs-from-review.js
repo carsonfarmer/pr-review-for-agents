@@ -124,6 +124,7 @@ IMPORTANT:
 - When updating the documentation, preserve all existing functionality, requirements, and instructions.
 - Only add or clarify based on the review comments - never remove or reduce existing content unless explicitly requested in the comments.
 - If the review comments don't contain relevant information for this documentation file, return an empty response (no text at all).
+- Only update ${docFile}, do not modify any other files.
 - Return the full updated content of the ${docFile} file as plain markdown.`,
     prompt: `Please update the ${docFile} documentation based on these PR review comments:
 

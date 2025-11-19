@@ -80,6 +80,7 @@ runs:
         branch: update-${{ inputs.doc-file }}-pr-${{ github.event.pull_request.number }}
         delete-branch: true
         signoff: true
+        sign-commits: true
         title: "docs: Update ${{ inputs.doc-file }} from PR #${{ github.event.pull_request.number }} review"
         body: |
           Automated documentation update based on review comments from PR #${{ github.event.pull_request.number }}.
