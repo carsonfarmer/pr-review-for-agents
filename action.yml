@@ -1,30 +1,30 @@
-name: 'PR Review to AGENTS.md'
-description: 'Automatically updates AGENTS.md documentation based on PR review comments using AI'
-author: 'Your Name'
+name: "PR Review to AGENTS.md"
+description: "Automatically updates AGENTS.md documentation based on PR review comments using AI"
+author: "Carson Farmer"
 
 branding:
-  icon: 'file-text'
-  color: 'blue'
+  icon: "file-text"
+  color: "blue"
 
 inputs:
   github-token:
-    description: 'GitHub token for API access'
+    description: "GitHub token for API access"
     required: true
     default: ${{ github.token }}
   anthropic-api-key:
-    description: 'Anthropic API key for Claude'
+    description: "Anthropic API key for Claude"
     required: true
   model:
-    description: 'Claude model to use'
+    description: "Claude model to use"
     required: false
-    default: 'claude-sonnet-4-5-20250929'
+    default: "claude-sonnet-4-5-20250929"
   doc-file:
-    description: 'Documentation file to update'
+    description: "Documentation file to update"
     required: false
-    default: 'AGENTS.md'
+    default: "AGENTS.md"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Check if PR modifies doc file
       id: check_files
@@ -45,7 +45,7 @@ runs:
       if: steps.check_files.outputs.skip != 'true'
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: "20"
 
     - name: Install dependencies
       if: steps.check_files.outputs.skip != 'true'
@@ -66,16 +66,26 @@ runs:
         REVIEW_BODY: ${{ github.event.review.body }}
         REVIEW_STATE: ${{ github.event.review.state }}
 
-    - name: Commit and push changes
+    - name: Create Pull Request with documentation updates
       if: steps.check_files.outputs.skip != 'true'
-      shell: bash
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add ${{ inputs.doc-file }}
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "docs: Update ${{ inputs.doc-file }} from PR review"
-          git push
-        fi
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ inputs.github-token }}
+        commit-message: |
+          docs: Update ${{ inputs.doc-file }} from PR #${{ github.event.pull_request.number }} review
+
+          Automated update based on review comments.
+
+          Source PR: #${{ github.event.pull_request.number }}
+        branch: update-${{ inputs.doc-file }}-pr-${{ github.event.pull_request.number }}
+        delete-branch: true
+        signoff: true
+        title: "docs: Update ${{ inputs.doc-file }} from PR #${{ github.event.pull_request.number }} review"
+        body: |
+          Automated documentation update based on review comments from PR #${{ github.event.pull_request.number }}.
+
+          **Source PR:** #${{ github.event.pull_request.number }}
+          **Reviewer:** @${{ github.event.review.user.login }}
+
+          This PR updates `${{ inputs.doc-file }}` with insights from the review discussion.
+        labels: documentation, automated

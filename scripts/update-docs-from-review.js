@@ -1,7 +1,7 @@
+import { readFile, writeFile } from "node:fs/promises";
 import { anthropic } from "@ai-sdk/anthropic";
 import { Octokit } from "@octokit/rest";
 import { generateText } from "ai";
-import { readFile, writeFile } from "fs/promises";
 
 async function main() {
   // Initialize clients
@@ -124,7 +124,7 @@ IMPORTANT:
 - When updating the documentation, preserve all existing functionality, requirements, and instructions.
 - Only add or clarify based on the review comments - never remove or reduce existing content unless explicitly requested in the comments.
 - If the review comments don't contain relevant information for this documentation file, return an empty response (no text at all).
-- Return the full updated content of the ${docFile} file as plain text (not JSON).`,
+- Return the full updated content of the ${docFile} file as plain markdown.`,
     prompt: `Please update the ${docFile} documentation based on these PR review comments:
 
 ${prContext}
