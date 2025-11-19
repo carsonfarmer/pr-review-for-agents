@@ -60,6 +60,7 @@ Add your Anthropic API key to your repository secrets:
 
 - Go to Settings → Actions → General
 - Under "Workflow permissions", select "Read and write permissions"
+- Check "Allow GitHub Actions to create and approve pull requests"
 
 ### 4. Create your documentation file
 
